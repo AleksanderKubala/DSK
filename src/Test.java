@@ -4,7 +4,6 @@ public class Test implements Comparable<Test>{
 
     private Integer testingUnit;
     private Integer testedUnit;
-    private TestResult testValue;
 
     public Test(Integer testingUnit, Integer testedUnit) {
         this.testingUnit = testingUnit;
@@ -26,20 +25,34 @@ public class Test implements Comparable<Test>{
                 && testedUnit.equals(other.testedUnit));
     }
 
+    public Boolean isIncident(Integer node){
+        return ((testingUnit.equals(node)) || (testedUnit.equals(node)));
+    }
+
+    public Boolean isTestingUnit(Integer node) {
+        return testingUnit.equals(node);
+    }
+
+    public Boolean isTestedUnit(Integer node) {
+        return testedUnit.equals(node);
+    }
+
+    public Integer getOtherEnd(Integer node) {
+        if(isTestedUnit(node)) {
+            return testingUnit;
+        } else if( isTestingUnit(node)) {
+            return testedUnit;
+        } else {
+            return null;
+        }
+    }
+
     public Integer getTestingUnit() {
         return testingUnit;
     }
 
     public Integer getTestedUnit() {
         return testedUnit;
-    }
-
-    public TestResult getTestValue() {
-        return testValue;
-    }
-
-    public void setTestValue(TestResult testValue) {
-        this.testValue = testValue;
     }
 
     @Override

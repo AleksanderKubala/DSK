@@ -16,25 +16,10 @@ public class Main {
         DiagnosticStructure structure = new DiagnosticStructure(structureMap);
         structure.setDiagnosisParameter(2);
         structure.computeDiagnosticPattern();
-        List<Syndrome> syndromes = structure.getDiagnosticOpinionPattern();
-        /*List<Syndrome> syndromes = structure.getDiagnosticOpinionPattern();
-        Set<Test> tests  = syndromes.get(0).getTestResults().keySet();
-        StringBuilder builder = new StringBuilder("[");
-        for(Test test: tests) {
-            builder.append(test.getTestingUnit().toString() + ", ");
-        }
-        builder.append("]");
-        System.out.println(builder.toString());
-        builder = new StringBuilder("[");
-        for(Test test: tests) {
-            builder.append(test.getTestedUnit().toString() + ", ");
-        }
-        builder.append("]");
-        System.out.println(builder.toString());
-        System.out.println();
-        for(Syndrome syndrome: syndromes) {
-            System.out.println(syndrome.getTestResults().values().toString());
-        }
-        */
+        Syndrome syndrome = structure.getTestSyndrome(7);
+        LGraph lGraph = structure.computeLGraph(syndrome);
+        lGraph.label();
+        Set<Integer> faultyNodes = lGraph.getFaultyNodes();
+        System.out.println(faultyNodes.toString());
     }
 }
