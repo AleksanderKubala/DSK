@@ -3,6 +3,8 @@ package Gui;
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,9 +12,11 @@ public class StructureSettingsPanel extends JPanel{
 
     private Integer minStructureDegree = 3;
     private Integer maxstructureDegree = 9;
+    private Integer currentStructureDegree;
 
     private JPanel structureDetailsPanel;
     private JPanel matrixDetailsPanel;
+    private JPanel matrixValuesPanel;
 
     private JComboBox<Integer> structureDegree;
     private JComboBox<Integer> diagnosisParameter;
@@ -34,22 +38,19 @@ public class StructureSettingsPanel extends JPanel{
             structureDegree.addItem(i);
         }
         structureDegree.setSelectedIndex(0);
+        structureDegree.addActionListener(new StructureDegreeChangeListener());
         structureDegree.setVisible(true);
         structureDetailsPanel.add(structureDegree);
-        int currentStructureDegree = structureDegree.getItemAt(structureDegree.getSelectedIndex());
-        int maxTParameter = Math.floorDiv(currentStructureDegree - 1, 2);
+        currentStructureDegree = structureDegree.getItemAt(structureDegree.getSelectedIndex());
+
 
 
        JLabel tParameterLabel = new JLabel("T-Parameter: ");
        tParameterLabel.setVisible(true);
        structureDetailsPanel.add(tParameterLabel);
 
-        diagnosisParameter = new JComboBox<>();
-        for(int i = 1; i <= maxTParameter; i++) {
-            diagnosisParameter.addItem(i);
-        }
-        diagnosisParameter.setSelectedIndex(0);
-        diagnosisParameter.setVisible(true);
+       diagnosisParameter = new JComboBox<>();
+       updatePossibleTParameter();
 
 
         structureDetailsPanel.add(diagnosisParameter);
@@ -67,10 +68,43 @@ public class StructureSettingsPanel extends JPanel{
         matrixLabelPanel.setVisible(true);
         matrixDetailsPanel.add(matrixLabelPanel);
 
-        JPanel matrixValuesPanel = new JPanel();
+        matrixValuesPanel = new JPanel();
         matrixValuesPanel.setLayout(new BoxLayout(matrixValuesPanel, BoxLayout.Y_AXIS));
 
         structureAdjacencyMatrix = new ArrayList<>();
+        updateSettings();
+
+        matrixValuesPanel.setVisible(true);
+        matrixDetailsPanel.add(matrixValuesPanel);
+        matrixDetailsPanel.setVisible(true);
+
+        add(structureDetailsPanel);
+        add(matrixDetailsPanel);
+        setVisible(true);
+    }
+
+    private void updateSettings() {
+        updatePossibleTParameter();
+        updateAdjacencyMatrix();
+    }
+
+    private void updatePossibleTParameter() {
+        diagnosisParameter.removeAllItems();
+        int maxTParameter = Math.floorDiv(currentStructureDegree - 1, 2);
+        for(int i = 1; i <= maxTParameter; i++) {
+            diagnosisParameter.addItem(i);
+        }
+        diagnosisParameter.setSelectedIndex(0);
+        diagnosisParameter.setVisible(true);
+        diagnosisParameter.repaint();
+    }
+
+    private void updateAdjacencyMatrix() {
+        if(!structureAdjacencyMatrix.isEmpty()) {
+            matrixValuesPanel.removeAll();
+            structureAdjacencyMatrix.clear();
+        }
+
         for(int i = 0; i < currentStructureDegree; i++) {
             List<JCheckBox> matrixRow = new ArrayList<>();
             JPanel matrixRowPanel = new JPanel();
@@ -88,12 +122,21 @@ public class StructureSettingsPanel extends JPanel{
             matrixRowPanel.setVisible(true);
             structureAdjacencyMatrix.add(matrixRow);
         }
-        matrixValuesPanel.setVisible(true);
-        matrixDetailsPanel.add(matrixValuesPanel);
-        matrixDetailsPanel.setVisible(true);
+        matrixValuesPanel.repaint();
+    }
 
-        add(structureDetailsPanel);
-        add(matrixDetailsPanel);
-        setVisible(true);
+    private class StructureDegreeChangeListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            Object source = e.getSource();
+            if(source == structureDegree) {
+                Integer selectedStructureDegree = structureDegree.getItemAt(structureDegree.getSelectedIndex());
+                if(!selectedStructureDegree.equals(currentStructureDegree)) {
+                    currentStructureDegree = selectedStructureDegree;
+                    updateSettings();
+                }
+            }
+        }
     }
 }
