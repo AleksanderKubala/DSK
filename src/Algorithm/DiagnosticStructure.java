@@ -1,5 +1,6 @@
 package Algorithm;
 
+import Utils.Misc;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import java.util.*;
@@ -17,14 +18,14 @@ public class DiagnosticStructure {
         diagnosticOpinionPattern = new ArrayList<>();
     }
 
-    public DiagnosticStructure(Integer[][] adjacencyMatrix) {
+    public DiagnosticStructure(int[][] adjacencyMatrix) {
         this();
         if(adjacencyMatrix != null) {
             fillGraph(adjacencyMatrix);
         }
     }
 
-    public void fillGraph(Integer[][] adjacencyMatrix) {
+    public void fillGraph(int[][] adjacencyMatrix) {
         int nodeCount = adjacencyMatrix.length;
         for(int i = 0; i < nodeCount; i++) {
             structureGraph.addVertex(i);
@@ -41,7 +42,7 @@ public class DiagnosticStructure {
     public void computeDiagnosticPattern() {
         List<Set<Integer>> faultyUnitsSets = new ArrayList<>();
         for(int i = 0; i <= diagnosisParameter; i++) {
-            getSubsets(new ArrayList<>(structureGraph.vertexSet()), i, 0, new HashSet<>(), faultyUnitsSets);
+            Misc.getSubsets(new ArrayList<>(structureGraph.vertexSet()), i, 0, new HashSet<>(), faultyUnitsSets);
         }
         for(Set<Integer> faultyUnitsSet: faultyUnitsSets) {
             Syndrome syndrome = computeSyndrome(faultyUnitsSet);
@@ -119,6 +120,7 @@ public class DiagnosticStructure {
         return lGraph;
     }
 
+    /*
     private void getSubsets(List<Integer> superSet, int k, int idx, Set<Integer> current, List<Set<Integer>> solution) {
         //successful stop clause
         if (current.size() == k) {
@@ -135,6 +137,7 @@ public class DiagnosticStructure {
         //"guess" x is not in the subset
         getSubsets(superSet, k, idx+1, current, solution);
     }
+    */
 
     public void setDiagnosisParameter(Integer diagnosisParameter) {
         this.diagnosisParameter = diagnosisParameter;

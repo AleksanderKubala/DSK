@@ -83,6 +83,32 @@ public class StructureSettingsPanel extends JPanel{
         setVisible(true);
     }
 
+    public JComboBox<Integer> getStructureDegreeComboBox() {
+        return structureDegree;
+    }
+
+    public Integer getCurrentStructureDegree() {
+        return currentStructureDegree;
+    }
+
+    public Integer getTParameterValue() {
+        return diagnosisParameter.getItemAt(diagnosisParameter.getSelectedIndex());
+    }
+
+    public int[][] getAdjacencyMatrix() {
+        int[][] adjacencyMatrix = new int[currentStructureDegree][currentStructureDegree];
+        for(int i = 0 ; i < currentStructureDegree; i++) {
+            List<JCheckBox> row = structureAdjacencyMatrix.get(i);
+            for(int j = 0; j < currentStructureDegree; j++) {
+                JCheckBox test = row.get(j);
+                if(test.isSelected()) {
+                    adjacencyMatrix[i][j] = 1;
+                }
+            }
+        }
+        return adjacencyMatrix;
+    }
+
     private void updateSettings() {
         updatePossibleTParameter();
         updateAdjacencyMatrix();

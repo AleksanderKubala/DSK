@@ -12,8 +12,9 @@ public class MainWindow extends JFrame {
     private int maxNodes = 7;
 
     private StructureSettingsPanel structureSettingsPanel;
-    private JPanel messagePanel;
-    private JPanel buttonPanel;
+    private OptionsPanel optionsPanel;
+    private JPanel operationalPanel;
+    private JPanel graphPanel;
     private JPanel structurePanel;
     private JPanel lGraphPanel;
 
@@ -22,10 +23,21 @@ public class MainWindow extends JFrame {
     public MainWindow() {
         pane = getContentPane();
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
-        pane.setLayout(new FlowLayout());
+        pane.setLayout(new GridLayout(2, 2, 5, 5));
         setPreferredSize(new Dimension(800, 600));
+
+        operationalPanel = new JPanel();
+        operationalPanel.setLayout(new BoxLayout(operationalPanel, BoxLayout.X_AXIS));
+
         structureSettingsPanel = new StructureSettingsPanel();
-        add(structureSettingsPanel);
+        operationalPanel.add(structureSettingsPanel);
+
+        optionsPanel = new OptionsPanel(structureSettingsPanel);
+        operationalPanel.add(optionsPanel);
+
+        operationalPanel.setVisible(true);
+        add(operationalPanel);
+
         setVisible(true);
     }
 
