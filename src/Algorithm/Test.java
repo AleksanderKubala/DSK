@@ -1,3 +1,5 @@
+package Algorithm;
+
 import java.util.Comparator;
 
 public class Test implements Comparable<Test>{

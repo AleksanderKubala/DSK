@@ -1,3 +1,5 @@
+package Algorithm;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -45,11 +47,14 @@ public class Syndrome {
         Collection<TestResult> results = testResults.values();
         for(TestResult result: results) {
             if(result.getResult() == null) {
+                result.setResult(TestResult.OK);
+                /*
                 if(random.nextDouble() < 0.5) {
-                    result.setResult(TestResult.OK);
+                    result.setResult(Algorithm.TestResult.OK);
                 } else {
-                    result.setResult(TestResult.FAULTY);
+                    result.setResult(Algorithm.TestResult.FAULTY);
                 }
+                */
             }
         }
     }

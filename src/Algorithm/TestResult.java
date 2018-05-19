@@ -1,3 +1,5 @@
+package Algorithm;
+
 public class TestResult {
 
     public static final Integer FAULTY = 1;

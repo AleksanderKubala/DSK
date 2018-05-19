@@ -1,9 +1,8 @@
-import com.sun.javaws.exceptions.InvalidArgumentException;
+package Algorithm;
+
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class DiagnosticStructure {
 
@@ -78,6 +77,18 @@ public class DiagnosticStructure {
         } else {
             if(faultyTestedUnit) {
                 return new TestResult(TestResult.FAULTY);
+            } else {
+                return new TestResult(TestResult.OK);
+            }
+        }
+    }
+
+    private TestResult bgmModelTest(Boolean faultyTestingUnit, Boolean faultyTestesUnit) {
+        if(faultyTestesUnit)
+            return new TestResult(TestResult.FAULTY);
+        else {
+            if(faultyTestingUnit) {
+                return new TestResult(null);
             } else {
                 return new TestResult(TestResult.OK);
             }

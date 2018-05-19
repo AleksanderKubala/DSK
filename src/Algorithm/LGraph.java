@@ -1,3 +1,5 @@
+package Algorithm;
+
 import org.jgrapht.alg.interfaces.MatchingAlgorithm;
 import org.jgrapht.alg.matching.EdmondsMaximumCardinalityMatching;
 import org.jgrapht.graph.SimpleGraph;
@@ -10,7 +12,7 @@ import java.util.function.Supplier;
 
 public class LGraph {
 
-    private SimpleGraph<Node, Integer> graph;
+    public SimpleGraph<Node, Integer> graph;
 
     public LGraph(List<Integer> nodes) {
         graph = new SimpleGraph<>(null, new EdgeSupplier(), false);
@@ -74,6 +76,19 @@ public class LGraph {
         return faultyNodes;
     }
 
+    public int[][] getAdjacencyMatrix() {
+        int size = graph.vertexSet().size();
+        int[][] adjacencyMatrix = new int[size][size];
+        Set<Integer> edges = graph.edgeSet();
+        for(Integer edge: edges) {
+            Node source = graph.getEdgeSource(edge);
+            Node target = graph.getEdgeTarget(edge);
+            adjacencyMatrix[source.getIdentifier()][target.getIdentifier()] = 1;
+            adjacencyMatrix[target.getIdentifier()][source.getIdentifier()] = 1;
+        }
+        return adjacencyMatrix;
+    }
+
     private Set<Node> getAdjacentNodesByEdge(Node node, Set<Integer> edges) {
         Set<Integer> outgoingEdges = graph.outgoingEdgesOf(node);
         List<Integer> interestingEdges = new ArrayList<>();
@@ -131,7 +146,7 @@ public class LGraph {
 
     private class EdgeSupplier implements Supplier<Integer> {
 
-        private Integer globalId = 1;
+        private Integer globalId = 0;
 
         @Override
         public Integer get() {

@@ -1,3 +1,5 @@
+package Algorithm;
+
 public class Node {
 
     private Integer identifier;
