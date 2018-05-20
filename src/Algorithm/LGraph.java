@@ -2,6 +2,7 @@ package Algorithm;
 
 import org.jgrapht.alg.interfaces.MatchingAlgorithm;
 import org.jgrapht.alg.matching.EdmondsMaximumCardinalityMatching;
+import org.jgrapht.graph.DefaultUndirectedGraph;
 import org.jgrapht.graph.SimpleGraph;
 
 import java.util.ArrayList;
@@ -12,10 +13,10 @@ import java.util.function.Supplier;
 
 public class LGraph {
 
-    public SimpleGraph<Node, Integer> graph;
+    public DefaultUndirectedGraph<Node, Integer> graph;
 
     public LGraph(List<Integer> nodes) {
-        graph = new SimpleGraph<>(null, new EdgeSupplier(), false);
+        graph = new DefaultUndirectedGraph<>(null, new EdgeSupplier(), false);
         for(Integer node: nodes) {
             graph.addVertex(new Node(node));
         }

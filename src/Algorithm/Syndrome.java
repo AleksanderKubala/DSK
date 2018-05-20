@@ -47,14 +47,13 @@ public class Syndrome {
         Collection<TestResult> results = testResults.values();
         for(TestResult result: results) {
             if(result.getResult() == null) {
-                result.setResult(TestResult.OK);
-                /*
+                //result.setResult(TestResult.OK);
+
                 if(random.nextDouble() < 0.5) {
                     result.setResult(Algorithm.TestResult.OK);
                 } else {
                     result.setResult(Algorithm.TestResult.FAULTY);
                 }
-                */
             }
         }
     }

@@ -1,6 +1,9 @@
 package Algorithm;
 
 import Utils.Misc;
+import org.jgrapht.Graph;
+import org.jgrapht.GraphPath;
+import org.jgrapht.alg.shortestpath.AllDirectedPaths;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
 import java.util.*;
@@ -55,7 +58,11 @@ public class DiagnosticStructure {
 
     public Syndrome getTestSyndrome(Integer index) {
         Syndrome syndrome = diagnosticOpinionPattern.get(index);
-        return syndrome.getSyndromeRealization();
+        Syndrome realization = syndrome.getSyndromeRealization();
+        for(Test test: realization.getTests()) {
+            structureGraph.setEdgeWeight(test, realization.getTestValue(test).getResult());
+        }
+        return realization;
     }
 
     private Syndrome computeSyndrome(Set<Integer> faultyUnits) {
@@ -100,7 +107,47 @@ public class DiagnosticStructure {
         if(!diagnosticOpinionPattern.contains(syndrome)){
             throw new IllegalArgumentException("Passed syndrome is invalid for this diagnostic structure");
         }
+        Map<Integer, Set<Integer>> zeroDescendantsSets = computeZeroDescendatns();
+        Map<Integer, Set<Integer>> deltaSets = computeDeltaSets();
+        Map<Integer, Set<Integer>> zeroAncestorsSets = computeZeroAncestors();
 
+        Map<Integer, Set<Integer>> deltaZeroDescendatnsSets = new HashMap<>();
+        Map<Integer, Set<Integer>> deltaZeroDescendantsAncestorsSets = new HashMap<>();
+        Map<Integer, Set<Integer>> lSets = new HashMap<>();
+
+        for(Integer node: zeroDescendantsSets.keySet()) {
+            Set<Integer> deltaZeroDescendatns = new HashSet<>();
+            for(Integer zeroDescendant: zeroDescendantsSets.get(node)) {
+                deltaZeroDescendatns.addAll(deltaSets.get(zeroDescendant));
+            }
+            deltaZeroDescendatnsSets.put(node, deltaZeroDescendatns);
+        }
+
+
+        for(Integer node: deltaZeroDescendatnsSets.keySet()) {
+            Set<Integer> deltaZeroDescendantsAncestors = new HashSet<>();
+            for(Integer deltaZeroDescendant: deltaZeroDescendatnsSets.get(node)) {
+                deltaZeroDescendantsAncestors.addAll(zeroAncestorsSets.get(deltaZeroDescendant));
+            }
+            deltaZeroDescendantsAncestorsSets.put(node, deltaZeroDescendantsAncestors);
+        }
+
+        for(Integer node: deltaZeroDescendatnsSets.keySet()) {
+            Set<Integer> lSet = new HashSet<>();
+            lSet.addAll(deltaZeroDescendatnsSets.get(node));
+            lSet.addAll(deltaZeroDescendantsAncestorsSets.get(node));
+            lSets.put(node, lSet);
+        }
+
+        LGraph lGraph = new LGraph(new ArrayList<>(structureGraph.vertexSet()));
+
+        for(Integer node: zeroDescendantsSets.keySet()) {
+            for(Integer lNode: lSets.get(node)) {
+                lGraph.addEdge(lGraph.findNodeById(lNode), lGraph.findNodeById(node));
+            }
+        }
+
+        /*
         Set<Integer> nodes = structureGraph.vertexSet();
         Set<Test> tests = syndrome.getTests();
         LGraph lGraph = new LGraph(new ArrayList<>(nodes));
@@ -118,6 +165,88 @@ public class DiagnosticStructure {
         }
 
         return lGraph;
+        */
+        return lGraph;
+    }
+
+    private Map<Integer, Set<Integer>> computeZeroDescendatns() {
+        Map<Integer, Set<Integer>> zeroDescendantsSets = new HashMap<>();
+        Set<Integer> nodes = structureGraph.vertexSet();
+
+        AllDirectedPaths<Integer, Test> alg = new AllDirectedPaths<>(structureGraph);
+
+        for(Integer source: nodes) {
+            Set<Integer> zeroDescendants = new HashSet<>();
+            for(Integer target: nodes) {
+                if(!source.equals(target)) {
+                    List<GraphPath<Integer, Test>> paths = alg.getAllPaths(source, target, true, structureGraph.edgeSet().size());
+                    for(GraphPath<Integer, Test> path: paths) {
+                        double weightSum = 0.0;
+                        for(Test test: path.getEdgeList()) {
+                            weightSum += structureGraph.getEdgeWeight(test);
+                            if(weightSum > 0.0)
+                                break;
+                        }
+                        if(weightSum == 0.0) {
+                            zeroDescendants.add(target);
+                            break;
+                        }
+                    }
+                }
+            }
+            zeroDescendants.add(source);
+            zeroDescendantsSets.put(source, zeroDescendants);
+        }
+
+        return zeroDescendantsSets;
+    }
+
+    private Map<Integer, Set<Integer>> computeZeroAncestors() {
+        Map<Integer, Set<Integer>> zeroAncestorsSets = new HashMap<>();
+        AllDirectedPaths<Integer, Test> alg = new AllDirectedPaths<>(structureGraph);
+        Set<Integer> nodes = structureGraph.vertexSet();
+
+        for(Integer target: nodes) {
+            Set<Integer> zeroAncestors = new HashSet<>();
+            for(Integer source: nodes) {
+                if(!source.equals(target)) {
+                    List<GraphPath<Integer, Test>> paths = alg.getAllPaths(source, target, true, structureGraph.edgeSet().size());
+                    for(GraphPath<Integer, Test> path: paths) {
+                        double weightSum = 0.0;
+                        for(Test test: path.getEdgeList()) {
+                            weightSum += structureGraph.getEdgeWeight(test);
+                            if(weightSum > 0.0) {
+                                break;
+                            }
+                        }
+                        if(weightSum == 0.0) {
+                            zeroAncestors.add(source);
+                            break;
+                        }
+                    }
+                }
+            }
+            zeroAncestorsSets.put(target, zeroAncestors);
+        }
+        return zeroAncestorsSets;
+    }
+
+    private Map<Integer, Set<Integer>> computeDeltaSets() {
+        Map<Integer, Set<Integer>> deltaSets = new HashMap<>();
+        Set<Integer> nodes = structureGraph.vertexSet();
+        Set<Test> tests = structureGraph.edgeSet();
+        for(Integer node: nodes) {
+            Set<Integer> deltaSet = new HashSet<>();
+            for(Test test: tests) {
+                if(test.isIncident(node)) {
+                    if(structureGraph.getEdgeWeight(test) == 1.0) {
+                        deltaSet.add(test.getOtherEnd(node));
+                    }
+                }
+            }
+            deltaSets.put(node, deltaSet);
+        }
+        return deltaSets;
     }
 
     /*

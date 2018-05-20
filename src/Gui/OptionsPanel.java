@@ -286,7 +286,6 @@ public class OptionsPanel extends JPanel {
                     testingUnits.repaint();
                     testedUnits.repaint();
                     syndromes.repaint();
-                    return;
                 }
             }
         }

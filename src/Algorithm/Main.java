@@ -24,7 +24,7 @@ public class Main {
         DiagnosticStructure structure = new DiagnosticStructure(structureMap);
         structure.setDiagnosisParameter(2);
         structure.computeDiagnosticPattern();
-        Syndrome syndrome = structure.getTestSyndrome(12);
+        Syndrome syndrome = structure.getTestSyndrome(15);
         Set<Test> tests = syndrome.getTests();
         for(Test test: tests) {
             System.out.println(test.getTestingUnit() + "->" + test.getTestedUnit() + " || " + syndrome.getTestValue(test).getResult());
