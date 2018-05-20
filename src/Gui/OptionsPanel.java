@@ -61,18 +61,21 @@ public class OptionsPanel extends JPanel {
         buttonPanel.add(generate);
 
         createLGraph = new JButton("Create L-Graph");
+        createLGraph.addActionListener(new LGraphActionListener());
         createLGraph.setVisible(true);
         createLGraph.setEnabled(false);
         createLGraph.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.add(createLGraph);
 
         findMatching = new JButton("Find Matching");
+        findMatching.addActionListener(new MatchingActionListener());
         findMatching.setVisible(true);
         findMatching.setEnabled(false);
         findMatching.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.add(findMatching);
 
         label = new JButton("Label");
+        label.addActionListener(new LabelActionListener());
         label.setVisible(true);
         label.setEnabled(false);
         label.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -194,12 +197,12 @@ public class OptionsPanel extends JPanel {
                 int uniqueChildrenCount = 0;
                 List<Integer> checkedNodes = new ArrayList<>();
                 for(Integer node: checkedSubset) {
-                    for(int j = 0; j < adjacencyMatrix.length; j++) {
-                        Integer checkedNode = adjacencyMatrix[node][j];
-                        if(checkedNode != 0) {
-                            if(!checkedNodes.contains(checkedNode)) {
+                    for(int child = 0; child < adjacencyMatrix.length; child++) {
+                        Integer childValue = adjacencyMatrix[node][child];
+                        if(childValue != 0) {
+                            if(!checkedNodes.contains(child)) {
                                 uniqueChildrenCount++;
-                                checkedNodes.add(checkedNode);
+                                checkedNodes.add(child);
                             }
                         }
                     }
@@ -305,8 +308,60 @@ public class OptionsPanel extends JPanel {
                 messagePanel.messageNewLine("Selected syndrome realization: " + builder.toString());
                 messagePanel.message("Generating L-Graph for given syndrome realization... ");
                 lGraph = diagnosticStructure.computeLGraph(syndrome);
+                messagePanel.messageNewLine("Done.");
+                messagePanel.messageNewLine("Generated L-Graph conatins following edges: ");
+                Set<Integer> edges = lGraph.getGraphEdges();
+                for(Integer edge: edges) {
+                    messagePanel.messageNewLine(lGraph.graph.getEdgeSource(edge).getIdentifier()
+                            + " - "
+                            + lGraph.graph.getEdgeTarget(edge).getIdentifier());
+                }
+                findMatching.setEnabled(true);
             }
         }
     }
 
+    private class MatchingActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(e.getSource() == findMatching) {
+                messagePanel.message("Finding maximum cardinality matching in L-Graph... ");
+                lGraph.findMaximumCardinalityMatching();
+                messagePanel.messageNewLine("Done.");
+                messagePanel.messageNewLine("Edges belonging to found maximum matching are: ");
+                for(Integer edge: lGraph.maximumMatchingEdges) {
+                    messagePanel.messageNewLine(lGraph.graph.getEdgeSource(edge).getIdentifier()
+                            + " - "
+                            + lGraph.graph.getEdgeTarget(edge).getIdentifier());
+                }
+                label.setEnabled(true);
+            }
+        }
+    }
+
+    private class LabelActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(e.getSource() == label) {
+                messagePanel.message("Executing LABEL procedure... ");
+                lGraph.label();
+                messagePanel.messageNewLine("Done.");
+                messagePanel.messageNewLine("Results: ");
+                Set<Node> nodes = lGraph.graph.vertexSet();
+                StringBuilder builder = new StringBuilder();
+                for(Node node: nodes) {
+                    builder.append("Node " + node.getIdentifier() + ": ");
+                    if(node.isFaulty()) {
+                        builder.append("faulty");
+                    } else {
+                        builder.append("fault-free");
+                    }
+                    messagePanel.messageNewLine(builder.toString());
+                    builder.delete(0, builder.length());
+                }
+            }
+        }
+    }
 }

@@ -14,6 +14,7 @@ import java.util.function.Supplier;
 public class LGraph {
 
     public DefaultUndirectedGraph<Node, Integer> graph;
+    public Set<Integer> maximumMatchingEdges;
 
     public LGraph(List<Integer> nodes) {
         graph = new DefaultUndirectedGraph<>(null, new EdgeSupplier(), false);
@@ -36,9 +37,8 @@ public class LGraph {
     }
 
     public void label() {
-        MatchingAlgorithm.Matching<Node, Integer> matching = computeMaximumCardinalityMatching();
-        Set<Integer> matchingEdges = matching.getEdges();
-        Set<Node> unsaturatedNodes = findUnsaturatedNodes(matchingEdges);
+
+        Set<Node> unsaturatedNodes = findUnsaturatedNodes(maximumMatchingEdges);
         for(Node node: unsaturatedNodes) {
             node.setLabel(NodeFault.FAULT_FREE);
         }
@@ -56,7 +56,7 @@ public class LGraph {
                 }
             }
             if(currentNode.isFaulty()) {
-                Set<Node> adjacentNodes = getAdjacentNodesByEdge(currentNode, matchingEdges);
+                Set<Node> adjacentNodes = getAdjacentNodesByEdge(currentNode, maximumMatchingEdges);
                 for(Node adjacentNode: adjacentNodes) {
                     if(!adjacentNode.isLabeled()) {
                         adjacentNode.setLabel(NodeFault.FAULT_FREE);
@@ -88,6 +88,15 @@ public class LGraph {
             adjacencyMatrix[target.getIdentifier()][source.getIdentifier()] = 1;
         }
         return adjacencyMatrix;
+    }
+
+    public Set<Integer> getGraphEdges() {
+        return graph.edgeSet();
+    }
+
+    public void findMaximumCardinalityMatching() {
+        MatchingAlgorithm.Matching<Node, Integer> matching = computeMaximumCardinalityMatching();
+        maximumMatchingEdges = matching.getEdges();
     }
 
     private Set<Node> getAdjacentNodesByEdge(Node node, Set<Integer> edges) {

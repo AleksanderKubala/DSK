@@ -1,14 +1,6 @@
 package Algorithm;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Set;
-import org.jgrapht.io.ExportException;
-import org.jgrapht.io.MatrixExporter;
 
 public class Main {
 
@@ -29,28 +21,7 @@ public class Main {
         for(Test test: tests) {
             System.out.println(test.getTestingUnit() + "->" + test.getTestedUnit() + " || " + syndrome.getTestValue(test).getResult());
         }
-        //System.out.println(syndrome.getTestResults().values().toString());
-        /*
-        StringBuilder builder = new StringBuilder("[");
-        for(Algorithm.Test test: syndrome.getTests()) {
-            builder.append(test.getTestingUnit() + ", ");
-        }
-        System.out.println(builder.toString());
-        builder = new StringBuilder("[");
-        for(Algorithm.Test test: syndrome.getTests()) {
-            builder.append(test.getTestedUnit() + ", ");
-        }
-        System.out.println(builder.toString());
-        */
         LGraph lGraph = structure.computeLGraph(syndrome);
-        Path path = Paths.get("matrix.txt");
-        try {
-            Writer writer = new BufferedWriter(Files.newBufferedWriter(path));
-            MatrixExporter<Node, Integer> exporter = new MatrixExporter<>();
-            exporter.exportGraph(lGraph.graph, writer);
-        } catch (IOException | ExportException e) {
-            e.printStackTrace();
-        }
         int[][] adjacencyMatrix = lGraph.getAdjacencyMatrix();
         for(int i = 0; i < adjacencyMatrix.length; i++) {
             for(int j = 0; j < adjacencyMatrix.length; j++) {
