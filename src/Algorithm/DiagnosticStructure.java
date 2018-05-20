@@ -13,7 +13,11 @@ public class DiagnosticStructure {
 
 
     private SimpleDirectedWeightedGraph<Integer, Test> structureGraph;
+
+    //wzorzec opiniowania diagnostycznego
     private List<Syndrome> diagnosticOpinionPattern;
+
+    //parametr t systemu t-diagnozowalnego
     private Integer diagnosisParameter;
 
     public DiagnosticStructure() {
@@ -28,6 +32,7 @@ public class DiagnosticStructure {
         }
     }
 
+    //tworzenie grafu na bazie macierzy sasiedztwa
     public void fillGraph(int[][] adjacencyMatrix) {
         int nodeCount = adjacencyMatrix.length;
         for(int i = 0; i < nodeCount; i++) {
@@ -42,6 +47,8 @@ public class DiagnosticStructure {
         }
     }
 
+    // obliczanie wzorca opinii diagnostycznych
+    // dla n = 1..t wyznaczany pozdbiory wężłow liczności n i wartościaowanie modelem PMC
     public void computeDiagnosticPattern() {
         List<Set<Integer>> faultyUnitsSets = new ArrayList<>();
         for(int i = 0; i <= diagnosisParameter; i++) {
@@ -56,6 +63,7 @@ public class DiagnosticStructure {
         }
     }
 
+    // utworzenie realizacji syndromu - wstawienie losowych wartości za ocenę x.
     public Syndrome getTestSyndrome(Integer index) {
         Syndrome syndrome = diagnosticOpinionPattern.get(index);
         Syndrome realization = syndrome.getSyndromeRealization();
@@ -65,6 +73,7 @@ public class DiagnosticStructure {
         return realization;
     }
 
+    // obliczenie pojedynczego syndromu na podstawie zestawu możliwych jednostek niezdatnych
     private Syndrome computeSyndrome(Set<Integer> faultyUnits) {
         Syndrome syndrome = new Syndrome();
         Set<Test> tests = structureGraph.edgeSet();
@@ -79,6 +88,7 @@ public class DiagnosticStructure {
         return syndrome;
     }
 
+    // ocena modelem PMC
     private TestResult pmcModelTest(Boolean faultyTestingUnit, Boolean faultyTestedUnit) {
         if(faultyTestingUnit) {
             return new TestResult(null);
@@ -91,6 +101,7 @@ public class DiagnosticStructure {
         }
     }
 
+    //niepotrzebne
     private TestResult bgmModelTest(Boolean faultyTestingUnit, Boolean faultyTestesUnit) {
         if(faultyTestesUnit)
             return new TestResult(TestResult.FAULTY);
@@ -103,6 +114,20 @@ public class DiagnosticStructure {
         }
     }
 
+    // złożona z kilku kroków procedura wyznaczania L-Grafu:
+    //
+    // 1. dla wszystkich wierzchołków struktury opiniowania wyznaczenie następujących zbiorów:
+    //      1a. zbiorów 0-potomków(zeroDescendants) - wierzchołków do których istnieje 0-ścieżka z danego węzła
+    //      1b. zbiorów 0-przodków(zeroAncestors) - wierzchołków z których można dojść po 0-ścieżce
+    //      1c. zbiorów niezgodności(deltaSet) - zbioru takich wierzchołków które oceniają dany węzeł lub są przez niego oceniane jako niezdatne.
+    //
+    // 2. dla wszystkich wierzchołków struktury opiniowania utworzenie zbiorów niezgodności zbiorów 0-potomków węzła(deltaZeroDescendants)
+    //
+    // 3. dla wszystkich wierzchołków struktury opiniowania utworzenie zbiorów 0-przodków wierzchołków ze zbiorów niezgodności 0-potomków(deltaZeroDescendantsAncestors)
+    //
+    // 4. dla wszystkich wierzchołków struktury opiniowania utworzenie L-zbiorów jako sumy deltaZeroDescendants i deltaZeroDescendantsAncestors
+    //
+    // 5. w L-Grafie istnieje krawędź pomiędzy dwoma wierzchołkami u, v, gdy u należy do L-zbioru wierzchołka v.
     public LGraph computeLGraph(Syndrome syndrome) {
         if(!diagnosticOpinionPattern.contains(syndrome)){
             throw new IllegalArgumentException("Passed syndrome is invalid for this diagnostic structure");
@@ -115,6 +140,7 @@ public class DiagnosticStructure {
         Map<Integer, Set<Integer>> deltaZeroDescendantsAncestorsSets = new HashMap<>();
         Map<Integer, Set<Integer>> lSets = new HashMap<>();
 
+        //obliczanie zbiorów niezgodności 0-potomków jako sumy zbiorów niezgodności dla każdego 0-potomka
         for(Integer node: zeroDescendantsSets.keySet()) {
             Set<Integer> deltaZeroDescendatns = new HashSet<>();
             for(Integer zeroDescendant: zeroDescendantsSets.get(node)) {
@@ -123,7 +149,7 @@ public class DiagnosticStructure {
             deltaZeroDescendatnsSets.put(node, deltaZeroDescendatns);
         }
 
-
+        //obliczenia 0-przodków zbiorów niezgodności 0-potomków jako sumy zbiorów 0-przodków dla każdeego wierzchołka ze zbioru niezgodności 0-potomków
         for(Integer node: deltaZeroDescendatnsSets.keySet()) {
             Set<Integer> deltaZeroDescendantsAncestors = new HashSet<>();
             for(Integer deltaZeroDescendant: deltaZeroDescendatnsSets.get(node)) {
@@ -132,6 +158,7 @@ public class DiagnosticStructure {
             deltaZeroDescendantsAncestorsSets.put(node, deltaZeroDescendantsAncestors);
         }
 
+        //L_zbiór jako suma deltaZeroDescendtans i deltaZeroDescendatnsAncestors
         for(Integer node: deltaZeroDescendatnsSets.keySet()) {
             Set<Integer> lSet = new HashSet<>();
             lSet.addAll(deltaZeroDescendatnsSets.get(node));
@@ -169,12 +196,14 @@ public class DiagnosticStructure {
         return lGraph;
     }
 
+    // olibczanie zbiorów 0-potomków dla każdego węzła struktury
     private Map<Integer, Set<Integer>> computeZeroDescendatns() {
         Map<Integer, Set<Integer>> zeroDescendantsSets = new HashMap<>();
         Set<Integer> nodes = structureGraph.vertexSet();
 
         AllDirectedPaths<Integer, Test> alg = new AllDirectedPaths<>(structureGraph);
 
+        // od każdego wierzchołka do każdego wierzchołka wyznaczenie ścieżek.
         for(Integer source: nodes) {
             Set<Integer> zeroDescendants = new HashSet<>();
             for(Integer target: nodes) {
@@ -184,6 +213,7 @@ public class DiagnosticStructure {
                         double weightSum = 0.0;
                         for(Test test: path.getEdgeList()) {
                             weightSum += structureGraph.getEdgeWeight(test);
+                            // jeśli suma po łukach ze ścieżki większa niż 0, to nie jest to 0-ścieżka
                             if(weightSum > 0.0)
                                 break;
                         }
@@ -201,11 +231,13 @@ public class DiagnosticStructure {
         return zeroDescendantsSets;
     }
 
+    //obliczanie zbiorów 0-przodków dla każdego węzłą struktury
     private Map<Integer, Set<Integer>> computeZeroAncestors() {
         Map<Integer, Set<Integer>> zeroAncestorsSets = new HashMap<>();
         AllDirectedPaths<Integer, Test> alg = new AllDirectedPaths<>(structureGraph);
         Set<Integer> nodes = structureGraph.vertexSet();
 
+        // analogicznie jak w prypadku wyznaczania zbiorów 0-potomków
         for(Integer target: nodes) {
             Set<Integer> zeroAncestors = new HashSet<>();
             for(Integer source: nodes) {
@@ -215,6 +247,7 @@ public class DiagnosticStructure {
                         double weightSum = 0.0;
                         for(Test test: path.getEdgeList()) {
                             weightSum += structureGraph.getEdgeWeight(test);
+                            // jeśli suma po łukach ze ścieżki większa niż 0, to nie jest to 0-ścieżka
                             if(weightSum > 0.0) {
                                 break;
                             }
@@ -231,13 +264,16 @@ public class DiagnosticStructure {
         return zeroAncestorsSets;
     }
 
+    // obliczanie zbioró niezgodności
     private Map<Integer, Set<Integer>> computeDeltaSets() {
         Map<Integer, Set<Integer>> deltaSets = new HashMap<>();
         Set<Integer> nodes = structureGraph.vertexSet();
         Set<Test> tests = structureGraph.edgeSet();
         for(Integer node: nodes) {
             Set<Integer> deltaSet = new HashSet<>();
+            // dla każdego testu (tj. łuku w strukturze)
             for(Test test: tests) {
+                // jeżeli jest jednym z końców łuku i wartość na łuku równa 1 (ocena jako niezdatny) to dodawanie potomka albo przodka(nie ma potrzeby rozróżniania)
                 if(test.isIncident(node)) {
                     if(structureGraph.getEdgeWeight(test) == 1.0) {
                         deltaSet.add(test.getOtherEnd(node));

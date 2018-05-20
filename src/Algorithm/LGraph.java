@@ -36,16 +36,23 @@ public class LGraph {
         graph.addEdge(source, target);
     }
 
+    //procedura LABEL - wersja równoważna.
     public void label() {
 
+        // wszystkie M-nienasycone wierzchołki ( nieincydentne z żadna krawędzią maksymalnego skojarzenia M)
+        // oznaczane jako fault-free i dodawanie do listy wierzchołków do przejrzenia
         Set<Node> unsaturatedNodes = findUnsaturatedNodes(maximumMatchingEdges);
         for(Node node: unsaturatedNodes) {
             node.setLabel(NodeFault.FAULT_FREE);
         }
+
         List<Node> labeledNodes = new ArrayList<>(unsaturatedNodes);
+        //dla każdego oznaczonego wierzchołka
         while(!labeledNodes.isEmpty()) {
+            //usuwany z listy do sprawdzenia
             Node currentNode = labeledNodes.get(0);
             labeledNodes.remove(currentNode);
+            // jeżeli wierzchołek oznaczony jako faulty-free - wszystkie przyległę i nieoznaczone wierzchołki oznaczane jako faulty
             if(currentNode.isFaultFree()) {
                 Set<Node> adjacentNodes = getAdjacentNodes(currentNode);
                 for(Node adjacentNode: adjacentNodes) {
@@ -55,6 +62,8 @@ public class LGraph {
                     }
                 }
             }
+            //jeśli wierzchołek oznaczony jako faulty - oznaczenie wszystkich przyległych do niego wierzchołków
+            // po krawędziach z maksymalnego skojarzenia jako fault-free
             if(currentNode.isFaulty()) {
                 Set<Node> adjacentNodes = getAdjacentNodesByEdge(currentNode, maximumMatchingEdges);
                 for(Node adjacentNode: adjacentNodes) {
@@ -127,6 +136,8 @@ public class LGraph {
         return adjacentNodes;
     }
 
+    // wyszukiwanie M-nienasyconych wierzchołków - jeżeli wierzchołek nie jest końcem jakiejkolwiek
+    // krawędzi ze skojarzenia M to jest M-nienasycony
     private Set<Node> findUnsaturatedNodes(Set<Integer> matching) {
         Set<Node> unsaturatedVertices = new HashSet<>(graph.vertexSet());
         Set<Node> checkedNodes = new HashSet<>();
@@ -149,6 +160,7 @@ public class LGraph {
         return unsaturatedVertices;
     }
 
+    //algorytm z biblioteki jgrapht
     private MatchingAlgorithm.Matching<Node, Integer> computeMaximumCardinalityMatching() {
         MatchingAlgorithm<Node, Integer> matchingAlgorithm = new EdmondsMaximumCardinalityMatching<>(graph);
         return matchingAlgorithm.getMatching();

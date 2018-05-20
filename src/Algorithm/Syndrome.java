@@ -28,6 +28,7 @@ public class Syndrome {
         return testResults;
     }
 
+    // tworzenie realizacji syndromu - zastąpienie wartości x losowymi 0 lub 1
     public Syndrome getSyndromeRealization() {
        Map<Test, TestResult> testResultsRealization = (Map<Test, TestResult>)((HashMap<Test, TestResult>)testResults).clone();
        Syndrome realization = new Syndrome();
@@ -42,6 +43,7 @@ public class Syndrome {
         return testResults.keySet();
     }
 
+    // wartościowanie oceny x
     private void evaluate() {
         Random random = new Random();
         Collection<TestResult> results = testResults.values();

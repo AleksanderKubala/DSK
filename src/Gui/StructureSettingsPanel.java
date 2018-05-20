@@ -114,6 +114,9 @@ public class StructureSettingsPanel extends JPanel{
         updateAdjacencyMatrix();
     }
 
+    //zapewnienie spełnienia pierwszego warunku koniecznego dla struktury t-diagnozowalnej
+    // liczba wierzchołków w grafie musi być większa od 2t+1 (PMC)
+    // ograniczenie t do wartości <= (n-1)/2
     private void updatePossibleTParameter() {
         diagnosisParameter.removeAllItems();
         int maxTParameter = Math.floorDiv(currentStructureDegree - 1, 2);

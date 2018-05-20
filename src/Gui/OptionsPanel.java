@@ -157,8 +157,11 @@ public class OptionsPanel extends JPanel {
         setVisible(true);
     }
 
+    //sprawdzanie drugiego warunku koniecznego dla t-diagnozowalności:
+    // każdy wierzchołek musi być sprawdzany przez co namniej t innych wierzchołków
     private Boolean checkNecessaryCondition(int[][] adjacencyMatrix, Integer diagnosisParameter) {
 
+        // kolumna macierzy sąsiedztwa wyznacza wierzchołki sprawdzające dany
         Boolean conditionMet = true;
         int checkedColumn = 0;
         for(int i = 0; (i < adjacencyMatrix.length) && (conditionMet); i++) {
@@ -167,6 +170,8 @@ public class OptionsPanel extends JPanel {
             for(int j = 0; (j < adjacencyMatrix.length); j++) {
                 columnSum += adjacencyMatrix[j][i];
             }
+            //jeżeli suma w kolumnie mniejsza niż t - wierzchołke nie jest sprawdzany
+            // przez co najmniej t innych wierzchołków, i warunek niespełniony
             if(columnSum < diagnosisParameter)
                 conditionMet = false;
         }
@@ -179,7 +184,8 @@ public class OptionsPanel extends JPanel {
         return conditionMet;
     }
 
-
+    // sprawdzanie warunku wystarczającego
+    // liczba unikalnych następników danego podzbioru wierzchołków musi być większa od parametru p
     private Boolean checkSufficientCondition(int[][] adjacencyMatrix, Integer diagnosisParameter) {
         Boolean conditionMet = true;
         List<Integer> nodes = new ArrayList<>();
@@ -188,13 +194,17 @@ public class OptionsPanel extends JPanel {
             nodes.add(i);
         }
 
+        //parametr p jest w zakresie od 0 do t-1.
         for(int p = 0; (p < diagnosisParameter) && (conditionMet); p++) {
             List<Set<Integer>> subsets = new ArrayList<>();
+            //liczność rozpatrywanego podzbioru = liczba wszystkich wierzchołków struktury - 2*t + p
             int subsetSize = (adjacencyMatrix.length - (2*diagnosisParameter) + p);
             Misc.getSubsets(nodes, subsetSize, 0, new HashSet<>(), subsets);
+            //w macierzy sąsiedztwa następnicy wierzchołka są wypisani w wierszach
             for(int i = 0; (i < subsets.size()) && (conditionMet); i++) {
                 checkedSubset = subsets.get(i);
                 int uniqueChildrenCount = 0;
+                // zapamiętywanie sprawdzonych następników
                 List<Integer> checkedNodes = new ArrayList<>();
                 for(Integer node: checkedSubset) {
                     for(int child = 0; child < adjacencyMatrix.length; child++) {
