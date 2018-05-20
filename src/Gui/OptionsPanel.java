@@ -25,7 +25,7 @@ public class OptionsPanel extends JPanel {
     private JButton label;
 
     private JPanel buttonPanel;
-    private JPanel messagePanel;
+    //private JPanel messagePanel;
     private JPanel resultsPanel;
     private JPanel syndromePanel;
 
@@ -37,16 +37,18 @@ public class OptionsPanel extends JPanel {
     private JLabel result;
 
     private StructureSettingsPanel settingsPanel;
+    private MessagePanel messagePanel;
 
     private DiagnosticStructure diagnosticStructure;
     private LGraph lGraph;
 
-    public OptionsPanel(StructureSettingsPanel settingsPanel) {
+    public OptionsPanel(StructureSettingsPanel settingsPanel, MessagePanel messagePanel) {
         super();
         setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         this.settingsPanel = settingsPanel;
+        this.messagePanel = messagePanel;
 
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
@@ -79,6 +81,7 @@ public class OptionsPanel extends JPanel {
         buttonPanel.setVisible(true);
         add(buttonPanel);
 
+        /*
         messagePanel = new JPanel();
         messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
         messagePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -87,6 +90,7 @@ public class OptionsPanel extends JPanel {
         message.setVisible(true);
         message.setAlignmentX(Component.CENTER_ALIGNMENT);
         messagePanel.add(message);
+
 
         messagePanel.setVisible(true);
         add(messagePanel);
@@ -106,7 +110,7 @@ public class OptionsPanel extends JPanel {
         resultsPanel.add(result);
 
         resultsPanel.setVisible(true);
-        add(resultsPanel);
+        add(resultsPanel);*/
 
         JPanel syndromesDescPanel = new JPanel();
         syndromesDescPanel.setLayout(new BoxLayout(syndromesDescPanel, BoxLayout.Y_AXIS));
@@ -164,8 +168,10 @@ public class OptionsPanel extends JPanel {
                 conditionMet = false;
         }
         if(!conditionMet) {
+            messagePanel.messageNewLine("Necessary condition not met. Check node " + checkedColumn + ".");
+            /*
             message.setText("Necessary condition not met. Check node " + checkedColumn);
-            message.repaint();
+            message.repaint();*/
         }
         return conditionMet;
     }
@@ -204,36 +210,12 @@ public class OptionsPanel extends JPanel {
             }
         }
         if(!conditionMet) {
-            message.setText("Sufficient condition not met. Check nodes: " + checkedSubset.toString() + "");
-            message.repaint();
+            messagePanel.messageNewLine("Sufficient condition not met. Check nodes: " + checkedSubset.toString() + ".");
+           /* message.setText("Sufficient condition not met. Check nodes: " + checkedSubset.toString() + "");
+            message.repaint();*/
         }
 
         return conditionMet;
-    }
-
-    private class GenerateActionListener implements ActionListener {
-
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if(e.getSource() == generate) {
-                int[][] adjacencyMatrix = settingsPanel.getAdjacencyMatrix();
-                Integer diagnosisParameter = settingsPanel.getTParameterValue();
-                Boolean conditionsMet = checkNecessaryCondition(adjacencyMatrix, diagnosisParameter);
-                if(conditionsMet) {
-                    conditionsMet = checkSufficientCondition(adjacencyMatrix, diagnosisParameter);
-                } else {
-                    return;
-                }
-                if(conditionsMet) {
-                    message.setText("Conditions met");
-                    message.repaint();
-                    diagnosticStructure = new DiagnosticStructure(adjacencyMatrix);
-                    diagnosticStructure.setDiagnosisParameter(diagnosisParameter);
-                    diagnosticStructure.computeDiagnosticPattern();
-                    updateSyndromesBox();
-                }
-            }
-        }
     }
 
     private void updateSyndromesBox() {
@@ -263,4 +245,69 @@ public class OptionsPanel extends JPanel {
         testedUnits.repaint();
         syndromes.repaint();
     }
+
+    private class GenerateActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(e.getSource() == generate) {
+                int[][] adjacencyMatrix = settingsPanel.getAdjacencyMatrix();
+                Integer diagnosisParameter = settingsPanel.getTParameterValue();
+                Boolean conditionsMet = checkNecessaryCondition(adjacencyMatrix, diagnosisParameter);
+                if(conditionsMet) {
+                    conditionsMet = checkSufficientCondition(adjacencyMatrix, diagnosisParameter);
+                }
+                if(conditionsMet) {
+                    messagePanel.message("Necessary and sufficient conditions met. Generating diagnostic structure... ");
+                    /*
+                    message.setText("Conditions met");
+                    message.repaint();
+                    */
+                    diagnosticStructure = new DiagnosticStructure(adjacencyMatrix);
+                    diagnosticStructure.setDiagnosisParameter(diagnosisParameter);
+                    diagnosticStructure.computeDiagnosticPattern();
+                    updateSyndromesBox();
+                    messagePanel.messageNewLine("Done.");
+                    messagePanel.messageNewLine("Generated structure contains following tests: ");
+                    Set<Test> tests = diagnosticStructure.getStructureGraph().edgeSet();
+                    for(Test test: tests) {
+                        messagePanel.messageNewLine(test.getTestingUnit() + " -> " + test.getTestedUnit());
+                    }
+                    createLGraph.setEnabled(true);
+                }
+                if(!conditionsMet) {
+                    testingUnits.setText("----");
+                    testedUnits.setText("----");
+                    syndromes.removeAllItems();
+                    syndromes.addItem("----");
+                    createLGraph.setEnabled(false);
+                    findMatching.setEnabled(false);
+                    label.setEnabled(false);
+                    testingUnits.repaint();
+                    testedUnits.repaint();
+                    syndromes.repaint();
+                    return;
+                }
+            }
+        }
+    }
+
+    private class LGraphActionListener implements ActionListener {
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if(e.getSource() == createLGraph) {
+                Syndrome syndrome = diagnosticStructure.getTestSyndrome(syndromes.getSelectedIndex());
+                messagePanel.messageNewLine("Selected syndrome: " + syndromes.getItemAt(syndromes.getSelectedIndex()));
+                StringBuilder builder = new StringBuilder();
+                for(TestResult testResult: syndrome.getTestResults().values()) {
+                    builder.append(testResult.toString());
+                }
+                messagePanel.messageNewLine("Selected syndrome realization: " + builder.toString());
+                messagePanel.message("Generating L-Graph for given syndrome realization... ");
+                lGraph = diagnosticStructure.computeLGraph(syndrome);
+            }
+        }
+    }
+
 }
