@@ -41,13 +41,6 @@ public class MainWindow extends JFrame {
         setVisible(true);
     }
 
-    private void prepareMessagePanel() {
-
-    }
-
-    private void prepareButtonPanel() {
-
-    }
 
     private void prepareStructurePanel() {
 

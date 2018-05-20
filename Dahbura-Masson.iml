@@ -9,5 +9,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="org.jgrapht:jgrapht-core:1.2.0" level="project" />
     <orderEntry type="library" name="org.jgrapht:jgrapht-io:1.2.0" level="project" />
+    <orderEntry type="library" name="jgraphx-3.7.5" level="project" />
+    <orderEntry type="library" name="org.jgrapht:jgrapht-ext:1.2.0" level="project" />
   </component>
 </module>

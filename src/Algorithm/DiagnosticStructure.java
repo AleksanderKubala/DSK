@@ -146,4 +146,8 @@ public class DiagnosticStructure {
     public List<Syndrome> getDiagnosticOpinionPattern() {
         return diagnosticOpinionPattern;
     }
+
+    public SimpleDirectedWeightedGraph<Integer, Test> getStructureGraph() {
+        return structureGraph;
+    }
 }

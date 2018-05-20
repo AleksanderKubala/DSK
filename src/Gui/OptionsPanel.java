@@ -1,18 +1,21 @@
 package Gui;
 
-import Algorithm.DiagnosticStructure;
-import Algorithm.LGraph;
+import Algorithm.*;
 import Utils.Misc;
+import com.mxgraph.canvas.mxGraphics2DCanvas;
+import com.mxgraph.canvas.mxICanvas;
+import com.sun.org.apache.xml.internal.security.c14n.implementations.Canonicalizer11_OmitComments;
+import org.jgrapht.ext.JGraphXAdapter;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
+import javax.swing.plaf.basic.BasicComboBoxUI;
+import javax.swing.text.BoxView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
 
 public class OptionsPanel extends JPanel {
 
@@ -24,7 +27,12 @@ public class OptionsPanel extends JPanel {
     private JPanel buttonPanel;
     private JPanel messagePanel;
     private JPanel resultsPanel;
+    private JPanel syndromePanel;
 
+    private JComboBox<String> syndromes;
+
+    private JLabel testingUnits;
+    private JLabel testedUnits;
     private JLabel message;
     private JLabel result;
 
@@ -36,31 +44,36 @@ public class OptionsPanel extends JPanel {
     public OptionsPanel(StructureSettingsPanel settingsPanel) {
         super();
         setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED));
-        setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 
         this.settingsPanel = settingsPanel;
 
         buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         generate = new JButton("Generate");
         generate.addActionListener(new GenerateActionListener());
         generate.setVisible(true);
+        generate.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.add(generate);
 
         createLGraph = new JButton("Create L-Graph");
         createLGraph.setVisible(true);
         createLGraph.setEnabled(false);
+        createLGraph.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.add(createLGraph);
 
         findMatching = new JButton("Find Matching");
         findMatching.setVisible(true);
         findMatching.setEnabled(false);
+        findMatching.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.add(findMatching);
 
         label = new JButton("Label");
         label.setVisible(true);
         label.setEnabled(false);
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.add(label);
 
         buttonPanel.setVisible(true);
@@ -68,26 +81,71 @@ public class OptionsPanel extends JPanel {
 
         messagePanel = new JPanel();
         messagePanel.setLayout(new BoxLayout(messagePanel, BoxLayout.Y_AXIS));
+        messagePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         message = new JLabel("----");
         message.setVisible(true);
+        message.setAlignmentX(Component.CENTER_ALIGNMENT);
         messagePanel.add(message);
 
         messagePanel.setVisible(true);
         add(messagePanel);
 
         resultsPanel = new JPanel();
-        resultsPanel.setLayout(new FlowLayout());
+        resultsPanel.setLayout(new BoxLayout(resultsPanel, BoxLayout.Y_AXIS));
+        resultsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         JLabel faultyUnits = new JLabel("Faulty units: ");
         faultyUnits.setVisible(true);
+        faultyUnits.setAlignmentX(Component.CENTER_ALIGNMENT);
         resultsPanel.add(faultyUnits);
 
         result = new JLabel("----");
         result.setVisible(true);
+        result.setAlignmentX(Component.CENTER_ALIGNMENT);
         resultsPanel.add(result);
 
         resultsPanel.setVisible(true);
         add(resultsPanel);
+
+        JPanel syndromesDescPanel = new JPanel();
+        syndromesDescPanel.setLayout(new BoxLayout(syndromesDescPanel, BoxLayout.Y_AXIS));
+        syndromesDescPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel syndromeBoxLabel = new JLabel("Syndromes: ");
+        syndromeBoxLabel.setVisible(true);
+        syndromeBoxLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        syndromesDescPanel.add(syndromeBoxLabel);
+
+        testingUnits = new JLabel("----");
+        testingUnits.setVisible(true);
+        testingUnits.setAlignmentX(Component.CENTER_ALIGNMENT);
+        syndromesDescPanel.add(testingUnits);
+
+        testedUnits = new JLabel("----");
+        testedUnits.setVisible(true);
+        testedUnits.setAlignmentX(Component.CENTER_ALIGNMENT);
+        syndromesDescPanel.add(testedUnits);
+
+        syndromesDescPanel.setVisible(true);
+        add(syndromesDescPanel);
+
+        syndromePanel = new JPanel();
+        syndromePanel.setLayout(new BoxLayout(syndromePanel, BoxLayout.Y_AXIS));
+        syndromePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        DefaultListCellRenderer dlcr = new DefaultListCellRenderer();
+        dlcr.setHorizontalAlignment(DefaultListCellRenderer.CENTER);
+
+        syndromes = new JComboBox<>();
+        syndromes.addItem("----");
+        syndromes.setVisible(true);
+        syndromes.setAlignmentX(Component.CENTER_ALIGNMENT);
+        syndromes.setRenderer(dlcr);
+        syndromePanel.add(syndromes);
+
+        syndromePanel.setVisible(true);
+        add(syndromePanel);
 
         setVisible(true);
     }
@@ -106,7 +164,7 @@ public class OptionsPanel extends JPanel {
                 conditionMet = false;
         }
         if(!conditionMet) {
-            message.setText("<html><font color='red'>Necessary condition not met. Check node " + checkedColumn + "</font></html>");
+            message.setText("Necessary condition not met. Check node " + checkedColumn);
             message.repaint();
         }
         return conditionMet;
@@ -146,7 +204,7 @@ public class OptionsPanel extends JPanel {
             }
         }
         if(!conditionMet) {
-            message.setText("<html><font color='red'>Sufficient condition not met. Check nodes: " + checkedSubset.toString() + "</font></html>");
+            message.setText("Sufficient condition not met. Check nodes: " + checkedSubset.toString() + "");
             message.repaint();
         }
 
@@ -167,12 +225,42 @@ public class OptionsPanel extends JPanel {
                     return;
                 }
                 if(conditionsMet) {
-                    message.setText("<html><font color='green'>Conditions met.</font></html>");
+                    message.setText("Conditions met");
                     message.repaint();
-                    //diagnosticStructure = new DiagnosticStructure(adjacencyMatrix);
+                    diagnosticStructure = new DiagnosticStructure(adjacencyMatrix);
+                    diagnosticStructure.setDiagnosisParameter(diagnosisParameter);
+                    diagnosticStructure.computeDiagnosticPattern();
+                    updateSyndromesBox();
                 }
             }
         }
     }
 
+    private void updateSyndromesBox() {
+        syndromes.removeAllItems();
+        List<Syndrome> syndromeList = diagnosticStructure.getDiagnosticOpinionPattern();
+        StringBuilder testingUnitsString = new StringBuilder();
+        StringBuilder testedUnitsString = new StringBuilder();
+        for(Syndrome syndrome: syndromeList) {
+            StringBuilder builder = new StringBuilder();
+            Collection<TestResult> testResults = syndrome.getTestResults().values();
+            for(TestResult testResult: testResults) {
+                builder.append(testResult.toString());
+            }
+            syndromes.addItem(builder.toString());
+        }
+        if(!syndromeList.isEmpty()) {
+            Syndrome syndrome = syndromeList.get(0);
+            Set<Test> tests = syndrome.getTests();
+            for(Test test: tests) {
+                testingUnitsString.append(test.getTestingUnit());
+                testedUnitsString.append(test.getTestedUnit());
+            }
+        }
+        testingUnits.setText(testingUnitsString.toString());
+        testedUnits.setText(testedUnitsString.toString());
+        testingUnits.repaint();
+        testedUnits.repaint();
+        syndromes.repaint();
+    }
 }
