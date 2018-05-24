@@ -41,6 +41,8 @@ public class MainWindow extends JFrame {
 
         add(messagePanel);
 
+        setSize(800, 425);
+
         setVisible(true);
     }
 }

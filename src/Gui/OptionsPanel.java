@@ -2,15 +2,9 @@ package Gui;
 
 import Algorithm.*;
 import Utils.Misc;
-import com.mxgraph.canvas.mxGraphics2DCanvas;
-import com.mxgraph.canvas.mxICanvas;
-import com.sun.org.apache.xml.internal.security.c14n.implementations.Canonicalizer11_OmitComments;
-import org.jgrapht.ext.JGraphXAdapter;
 
 import javax.swing.*;
 import javax.swing.border.EtchedBorder;
-import javax.swing.plaf.basic.BasicComboBoxUI;
-import javax.swing.text.BoxView;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
